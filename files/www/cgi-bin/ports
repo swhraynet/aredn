@@ -132,6 +132,10 @@ local alias_err = {}
 function aliaserr(msg)
     alias_err[#alias_err + 1] = msg
 end
+local dhcpopt_err = {}
+function dhcpopterr(msg)
+    dhcpopt_err[#dhcpopt_err + 1] = msg
+end
 local errors = {}
 function err(msg)
     errors[#errors + 1] = msg
@@ -185,6 +189,7 @@ local portfile = "/etc/config.mesh/_setup.ports" .. fsuffix
 local dhcpfile = "/etc/config.mesh/_setup.dhcp" .. fsuffix
 local servfile = "/etc/config.mesh/_setup.services" .. fsuffix
 local aliasfile = "/etc/config.mesh/aliases" .. fsuffix
+local dhcpoptsfile  = "/etc/config.mesh/_setup.dhcpopts" .. fsuffix
 
 -- if a reset or a first time page load
 -- read the data from the config files
@@ -284,6 +289,23 @@ if parms.button_reset or not parms.reload then
     end
     parms.alias_num = i
 
+    -- dhcp options
+    i = 0
+    if nixio.fs.access(dhcpoptsfile) then
+        for line in io.lines(dhcpoptsfile)
+        do
+            if not (line:match("^%s*#") or line:match("^%s*$")) then
+                local option,value = line:match("(%S+)%s+(%S+)")
+                if option and value then
+                    i = i + 1
+                    parms["dhcpopt" .. i .. "_id"] = option
+                    parms["dhcpopt" .. i .. "_value"] = value
+                end
+            end
+        end
+    end
+    parms.dhcpopt_num = i
+
     -- sanatize the 'add' values
     parms.port_add_intf = dmz_mode ~= 0 and "wan" or "wifi"
     parms.port_add_type = "tcp"
@@ -304,6 +326,8 @@ if parms.button_reset or not parms.reload then
     parms.serv_add_suffix = ""
     parms.alias_add_host = ""
     parms.alias_add_ip = ""
+    parms.dhcpopt_add_id = ""
+    parms.dhcpopt_add_value = ""
 end
 
 local dhcp_start = tonumber(cursor:get("dhcp", "@dhcp[0]", "start"))
@@ -823,12 +847,84 @@ if f then
 end
 parms.serv_num = serv_num
 
+-- dhcp options
+local list = {}
+for i = 1,parms.dhcpopt_num
+do
+    list[#list + 1] = i
+end
+list[#list + 1] = "_add"
+local dhcpopt_num = 0
+
+for _, val in ipairs(list)
+do
+    for _ = 1,1
+    do
+        local id = parms["dhcpopt" .. val .. "_id"]
+        local value = parms["dhcpopt" .. val .. "_value"]
+        local foundoption = false
+        if val == "_add" then
+            if id ~= "" then
+                if not id:match("%d+") then
+                    dhcpopterr(val .. " ID '" .. id .. "' must be numeric")
+                end
+                local pattern = id .. "%s%S"
+                if nixio.fs.stat(dhcpoptsfile) then
+                    for line in io.lines(dhcpoptsfile)
+                    do
+                        if line:match(pattern) then
+                            foundoption = true
+                            dhcpopterr(val .. [[Option ]] .. id .. [[ is already in use!<br>
+                                Please remove the existing entry to change the value
+                            ]])
+                            break
+                        end
+                    end
+                end
+            end
+            if not ((id ~= "" or foundoption) and (parms.alias_add or parms.button_save)) then
+                break
+            end
+        elseif parms["dhcpopt" .. val .. "_del"] then
+            break
+        end
+        if val == "_add" and parms.button_save then
+            dhcpopterr(val .. " this option must be added or cleared out before saving changes")
+            break
+        end
+        if val == "_add" and #dhcpopt_err > 0 and dhcpopt_err[#dhcpopt_err]:match("^" .. val .. " ") then
+            break
+        end
+
+        dhcpopt_num = dhcpopt_num + 1
+        parms["dhcpopt" .. dhcpopt_num .. "_id"] = id
+        parms["dhcpopt" .. dhcpopt_num .. "_value"] = value
+        hosts[host] = true
+        if val == "_add" then
+            parms.dhcpopt_add_id = ""
+            parms.dhcpopt_add_value = ""
+        end
+    end
+end
+
+-- write to temp file
+local f = io.open(tmpdir .. "/dhcpopts", "w")
+if f then
+    for i = 1,dhcpopt_num
+    do
+        f:write(parms["dhcpopt" .. i .. "_id"] .. " " .. parms["dhcpopt" .. i .. "_value"] .. "\n")
+    end
+    f:close()
+end
+parms.dhcpopt_num = dhcpopt_num
+
 -- save configuration
-if parms.button_save and not (#port_err > 0 or #dhcp_err > 0 or #dmz_err > 0 or #serv_err > 0 or #alias_err > 0) then
+if parms.button_save and not (#port_err > 0 or #dhcp_err > 0 or #dmz_err > 0 or #serv_err > 0 or #alias_err > 0 or #dhcpopt_err > 0) then
     filecopy(tmpdir .. "/ports", portfile)
     filecopy(tmpdir .. "/dhcp", dhcpfile)
     filecopy(tmpdir .. "/services", servfile)
     filecopy(tmpdir .. "/aliases", aliasfile)
+    filecopy(tmpdir .. "/dhcpopts", dhcpoptsfile)
     
     if os.execute("/usr/local/bin/node-setup -a -p mesh") ~= 0 then
         err("problem with configuration")
@@ -1270,6 +1366,44 @@ function print_aliases()
     html.print("</table>")
 end
 
+function print_options()
+    html.print("<table cellpadding=0 cellspacing=0><tr><th colspan=4>DHCP Options</th></tr>")
+    html.print("<tr><td colspan=3 height=5></td></tr>")
+    html.print("<tr><td align=center>Option ID</td><td></td><td align=center>Option Value</td></tr>")
+    html.print("<tr><td colspan=3 height=5></td></tr>")
+
+    local list = {}
+    for i = 1,parms.dhcpopt_num
+    do
+        list[#list + 1] = i
+    end
+    list[#list + 1] = "_add"
+
+    for _, val in ipairs(list)
+    do
+        local id = parms["dhcpopt" .. val .. "_id"]
+        local value = parms["dhcpopt" .. val .. "_value"]
+        if val == "_add" and #list > 1 then
+            html.print("<tr><td colspan=3 height=10></td></tr>\n")
+        end
+        html.print("<tr><td align=center><input type=text name=dhcpopt" .. val .. "_id value='" .. id .. "' size=20></td>")
+        html.print("<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>")
+        html.print("<td align=center><input type=text name=dhcpopt" .. val .. "_value value='" .. value .. "' size=20></td>")
+        html.print("<td><nobr>&nbsp;<input type=submit name=")
+        if val == "_add" then
+            html.print("alias_add       value=Add title='Add Option'")
+        else
+            html.print("alias" .. val .. "_del value=Del title='Remove Option'")
+        end
+        html.print("></nobr></td></tr>")
+    end
+    for _, e in ipairs(dhcpopt_err)
+    do
+        html.print("<tr><th colspan=4>" .. e:gsub("^%S+ ", "") .. "</th></tr>")
+    end
+    html.print("</table>")
+end
+
 html.print("<tr><td align=center><table width=100%>")
 html.print("<tr><td width=1 align=center valign=top>")
 if dmz_mode ~= 0 then
@@ -1298,10 +1432,15 @@ html.print("<td align=center valign=top>")
 print_aliases()
 html.print("</td></tr></table>")
 
+html.print("<tr><td><hr></td></tr>")
+
+print_options()
+
 hide("<input type=hidden name=port_num value=" .. parms.port_num .. ">")
 hide("<input type=hidden name=dhcp_num value=" .. parms.dhcp_num .. ">")
 hide("<input type=hidden name=serv_num value=" .. parms.serv_num .. ">")
 hide("<input type=hidden name=alias_num value=" .. parms.alias_num .. ">")
+hide("<input type=hidden name=dhcpopt_num value=" .. parms.dhcpopt_num .. ">")
 
 for _, h in ipairs(hidden)
 do
