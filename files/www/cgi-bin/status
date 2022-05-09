@@ -160,11 +160,13 @@ if not wifi_disabled then
         wifi_channel = wifi_channel * 5 + 3000
     end
     wifi_chanbw = cursor:get("wireless", radio, "chanbw")
+    wifi_country = iwinfo[iwinfo.type('wlan0')].country('wlan0')
     wifi_ssid = "N/A"
     cursor:foreach("wireless", "wifi-iface",
         function (section)
             if section.network == "wifi" then
                 wifi_ssid = section.ssid
+                wifi_encryption = section.encryption
                 return false
             end
         end
@@ -340,6 +342,8 @@ if not wifi_disabled then
     col1[#col1 + 1] = "<th align=right><nobr>SSID</nobr></th><td>" .. wifi_ssid .. "</td>"
     col1[#col1 + 1] = "<th align=right><nobr>Channel</nobr></th><td>" .. wifi_channel .. "</td>"
     col1[#col1 + 1] = "<th align=right><nobr>Bandwidth</nobr></th><td>" .. wifi_chanbw .. " MHz</td>"
+    col1[#col1 + 1] = "<th align=right><nobr>Encryption</nobr></th><td>" .. ((wifi_encryption == "none") and "Disabled" or "<b>Enabled</b> [" .. wifi_encryption .. "]") .. "</td>"
+    col1[#col1 + 1] = "<th align=right><nobr>Regulatory Domain</nobr></th><td>" .. wifi_country .. "</td>"
 end
 
 -- right column - system info

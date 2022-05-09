@@ -457,6 +457,7 @@ if sf then
         end
         if cfg.wifi_enable == "1" then
             sf:write("/usr/sbin/iw dev " .. cfg.wifi_intf .. " set txpower fixed " .. cfg.wifi_txpower .. "00\n")
+            sf:write("/usr/sbin/iw reg set " .. cfg.wifi_country .. "\n")
         end
         if not is_null(cfg.aprs_lat) and not is_null(cfg.aprs_lon) then
             c:set("aredn", "@location[0]", "lat", cfg.aprs_lat)

@@ -103,12 +103,17 @@ for _dev in /sys/class/ieee80211/*; do
     is_mesh_rf=1
     channel="${wifi_channel}"
     chanbw="${wifi_chanbw}"
-    country="HX"
+    country="${wifi_country}"
     distance="${wifi_distance}"
     ssid="${wifi_ssid}-${chanbw}-v3"
     mode="adhoc"
-    encryption="none"
-    key=""
+    if [ -z "$wifi_key" ]; then
+      encryption="none"
+      key=""
+    else
+      encryption="psk2"
+      key="${wifi_key}"
+    fi
     network="wifi"
   elif [[  $wifi2_enable -eq 1 -a \( $ifacecount -eq 1 -o \( \( $ifacecount -gt 1 \) -a \( "$hwmode" = "$wifi2_hwmode" \) \) \) ]]; then 
     # LAN AP interface
