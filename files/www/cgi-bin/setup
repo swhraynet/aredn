@@ -606,6 +606,12 @@ if parms.button_save then
         wifi_chanbw = 20
     end
 
+    if wifi_encryption ~= "none" then
+        if #wifi_key < 8 or #wifi_key > 64 then
+            err("Mesh RF Password must be between 8 and 64 characters")
+        end
+    end
+
     local wifi_country_validated = false
     local countries = { "00","HX","AD","AE","AL","AM","AN","AR","AT","AU","AW","AZ","BA","BB","BD","BE","BG","BH","BL","BN","BO","BR","BY","BZ","CA","CH","CL","CN","CO","CR","CY","CZ","DE","DK","DO","DZ","EC","EE","EG","ES","FI","FR","GE","GB","GD","GR","GL","GT","GU","HN","HK","HR","HT","HU","ID","IE","IL","IN","IS","IR","IT","JM","JP","JO","KE","KH","KP","KR","KW","KZ","LB","LI","LK","LT","LU","LV","MC","MA","MO","MK","MT","MY","MX","NL","NO","NP","NZ","OM","PA","PE","PG","PH","PK","PL","PT","PR","QA","RO","RS","RU","RW","SA","SE","SG","SI","SK","SV","SY","TW","TH","TT","TN","TR","UA","US","UY","UZ","VE","VN","YE","ZA","ZW" }
     for _,country in ipairs(countries)
@@ -1155,7 +1161,18 @@ if wifi_enable == "1" then
     html.print("<option value='5'".. (wifi_chanbw == "5" and " selected" or "") .. ">5 MHz</option>")
     html.print("</select></td></tr>")
 
-    hidden[#hidden + 1] = "<input type=hidden name=wifi_country value='HX'>"
+    html.print("<tr><td>Country</td><td><select name=wifi_country>")
+    local countries_options = { "HX","AD","AE","AL","AM","AN","AR","AT","AU","AW","AZ","BA","BB","BD","BE","BG","BH","BL","BN","BO","BR","BY","BZ","CA","CH","CL","CN","CO","CR","CY","CZ","DE","DK","DO","DZ","EC","EE","EG","ES","FI","FR","GE","GB","GD","GR","GL","GT","GU","HN","HK","HR","HT","HU","ID","IE","IL","IN","IS","IR","IT","JM","JP","JO","KE","KH","KP","KR","KW","KZ","LB","LI","LK","LT","LU","LV","MC","MA","MO","MK","MT","MY","MX","NL","NO","NP","NZ","OM","PA","PE","PG","PH","PK","PL","PT","PR","QA","RO","RS","RU","RW","SA","SE","SG","SI","SK","SV","SY","TW","TH","TT","TN","TR","UA","US","UY","UZ","VE","VN","YE","ZA","ZW" }
+    for _,country in ipairs(countries_options)
+    do
+        html.print("<option value='" .. country .. "'".. (wifi_country == country and " selected" or "") .. ">" .. country .. "</option>")
+    end
+    html.print("</select></td></tr>")
+
+    html.print("<tr><td>Encryption</td><td><select name=wifi_encryption>")
+    html.print("<option value='none'".. (wifi_encryption == "none" and " selected" or "") .. ">None</option>")
+    html.print("<option value='psk2'".. (wifi_encryption == "psk2" and " selected" or "") .. ">WPA2 PSK</option>")
+    html.print("</select></td></tr><tr><td>Password</td><td><input type=password size=15 name=wifi_key value='" .. wifi_key .. "'></td></tr>")
 
     if lqm_mode then
         html.print("<tr><th colspan=2 align=center><hr><small>Power &amp; Link Quality</small></th></tr>")
@@ -1213,7 +1230,9 @@ else
     hidden[#hidden + 1] = "<input type=hidden name=wifi_channel value='" .. wifi_channel .."'>"
     hidden[#hidden + 1] = "<input type=hidden name=wifi_chanbw value='" .. wifi_chanbw .."'>"
     hidden[#hidden + 1] = "<input type=hidden name=wifi_distance value='" .. wifi_distance .."'>"
-    hidden[#hidden + 1] = "<input type=hidden name=wifi_country value='HX'>"
+    hidden[#hidden + 1] = "<input type=hidden name=wifi_encryption value='" .. wifi_encryption .."'>"
+    hidden[#hidden + 1] = "<input type=hidden name=wifi_key value='" .. wifi_key .."'>"
+    hidden[#hidden + 1] = "<input type=hidden name=wifi_country value='" .. wifi_country .. "'>"
 end
 
 html.print("</table></td>")
