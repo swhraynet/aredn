@@ -179,6 +179,7 @@ local wifi_channel
 local wifi_chanbw
 local wifi_country
 local wifi_ssid
+local wifi_mode
 if not wifi_disabled then
     wifi_channel = tonumber(cursor:get("wireless", radio, "channel"))
     if wifi_channel >= 76 and wifi_channel <= 99 then
@@ -191,6 +192,7 @@ if not wifi_disabled then
         function (section)
             if section.network == "wifi" then
                 wifi_ssid = section.ssid
+                wifi_mode = section.mode
                 wifi_encryption = section.encryption
                 return false
             end
@@ -429,6 +431,7 @@ end
 
 if not wifi_disabled then
     col1[#col1 + 1] = "<th align=right><nobr>SSID</nobr></th><td>" .. wifi_ssid .. "</td>"
+    col1[#col1 + 1] = "<th align=right><nobr>Link Mode</nobr></th><td>" .. (((wifi_mode == "adhoc") and "Mesh") or ((wifi_mode == "ap") and "Access Point") or ((wifi_mode == "sta") and "Client")) .. "</td>"   
     col1[#col1 + 1] = "<th align=right><nobr>Channel</nobr></th><td>" .. wifi_channel .. "</td>"
     col1[#col1 + 1] = "<th align=right><nobr>Bandwidth</nobr></th><td>" .. wifi_chanbw .. " MHz</td>"
     col1[#col1 + 1] = "<th align=right><nobr>Encryption</nobr></th><td>" .. ((wifi_encryption == "none") and "Disabled" or "<b>Enabled</b> [" .. wifi_encryption .. "]") .. "</td>"

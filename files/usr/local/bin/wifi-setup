@@ -106,7 +106,7 @@ for _dev in /sys/class/ieee80211/*; do
     country="${wifi_country}"
     distance="${wifi_distance}"
     ssid="${wifi_ssid}-${chanbw}-v3"
-    mode="adhoc"
+    mode="${wifi_mode}"
     if [ -z "$wifi_key" ]; then
       encryption="none"
       key=""
