@@ -1329,7 +1329,8 @@ for _,zone in ipairs(tz_db_names)
 do
     html.print("<option value='" .. zone.name .. "'".. (zone.name == time_zone_name and " selected" or "") .. ">" .. zone.name .. "</option>")
 end
-html.print("</select></td><td align=left>NTP Server</td><td><input type=text name=ntp_server size=20 value='" .. ntp_server .. "'></td></table></td></tr></table>")
+html.print("</select></td><td align=left>NTP Server</td><td><input type=text name=ntp_server size=20 value='" .. ntp_server .. "'></td></tr>")
+html.print("<tr><td colspan=2></td><td align=left>DNS names to override for NTP<br>(comma-separated list)</td><td><textarea id=node_ntp_override_hosts rows=2 cols=30 name=ntp_override_hosts>" .. ntp_override_hosts .. "</textarea></td></tr></table>")
 
 hidden[#hidden + 1] = "<input type=hidden name=reload value=1>"
 hidden[#hidden + 1] = "<input type=hidden name=dtdlink_ip value='" .. dtdlink_ip .. "'>"
