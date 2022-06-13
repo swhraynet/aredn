@@ -556,6 +556,20 @@ c:commit("dhcp")
 -- generate the wireless config file
 os.execute("/usr/local/bin/wifi-setup")
 
+-- generate additional DNS hosts file for ntp hostname override
+
+if nixio.fs.access("/etc/hosts_override", "r") then
+    local of = io.open("/etc/hosts_override", "w")
+    if of then
+        if not is_null(cfg.ntp_server) then
+            for ntp_override_host in string.gmatch(cfg.ntp_override_hosts, '([^,]+)') do
+                of:write(cfg.ntp_server .. " " .. ntp_override_host .. "\n")
+            end
+        end
+        of:close()
+    end
+end
+
 if not auto then
     print "configuration complete.";
     print "you should now reboot the router.";

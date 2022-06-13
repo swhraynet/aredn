@@ -1489,10 +1489,11 @@ end
 html.print("</select></td>")
 html.print("<td align=center>NTP Server &nbsp; <input type=text name=ntp_server size=20 value='" .. ntp_server .. "'></td>")
 if ntp_period == "daily" or not ntp_period then
-    html.print("<td>NTP Updates &nbsp; <select name=ntp_period><option value='daily' selected>daily</option><option value='hourly'>hourly</option></select></td></table></td></tr></table>")
+    html.print("<td>NTP Updates &nbsp; <select name=ntp_period><option value='daily' selected>daily</option><option value='hourly'>hourly</option></select></td></table></td></tr>")
 elseif ntp_period == "hourly" then
-    html.print("<td>NTP Updates &nbsp; <select name=ntp_period><option value='daily'>daily</option><option value='hourly' selected>hourly</option></select></td></table></td></tr></table>")
+    html.print("<td>NTP Updates &nbsp; <select name=ntp_period><option value='daily'>daily</option><option value='hourly' selected>hourly</option></select></td></table></td></tr>")
 end
+html.print("<tr><td colspan=2></td><td align=left>DNS names to override for NTP<br>(comma-separated list)</td><td><textarea id=node_ntp_override_hosts rows=2 cols=30 name=ntp_override_hosts>" .. ntp_override_hosts .. "</textarea></td></tr></table>")
 
 hidden[#hidden + 1] = "<input type=hidden name=reload value=1>"
 hidden[#hidden + 1] = "<input type=hidden name=dtdlink_ip value='" .. dtdlink_ip .. "'>"
