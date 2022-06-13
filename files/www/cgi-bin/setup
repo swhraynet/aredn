@@ -1023,7 +1023,11 @@ end
 
 if wifi_enable == "1" then
     html.print("<tr><td>SSID</td><td><input type=text size=15 name=wifi_ssid value='" .. wifi_ssid .. "'>-" .. wifi_chanbw .. "-v3</td></tr>")
-    hidden[#hidden + 1] = "<input type=hidden name=wifi_mode value='" .. wifi_mode .. "'>"
+    html.print("<tr><td>Link Mode</td><td><select name=wifi_mode>")
+    html.print("<option value='adhoc'".. (wifi_mode == "adhoc" and " selected" or "") .. ">Mesh</option>")
+    html.print("<option value='ap'".. (wifi_mode == "ap" and " selected" or "") .. ">Access Point</option>")
+    html.print("<option value='sta'".. (wifi_mode == "sta" and " selected" or "") .. ">Client</option>")
+    html.print("</select></td></tr>")
     html.print("<tr><td>Channel</td><td><select name=wifi_channel>")
     local rfchannels = rf_channels_list(wifiintf)
     table.sort(rfchannels, function(a, b) return a.number < b.number end)
