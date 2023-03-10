@@ -149,6 +149,14 @@ function hardware.get_iface_name(name)
     end
     local intfname = cursor:get("network", name, "ifname")
     if intfname then
+        -- handle ap/sta mode.
+        if intfname == "wlan0" then
+            local mode = cursor:get("wireless", "@wifi-iface[0]", "mode")
+            if mode == "ap" then
+                intfname = "wlan0-1"
+            end
+        end
+
         return intfname:match("^(%S+)")
     end
     -- Now we guess

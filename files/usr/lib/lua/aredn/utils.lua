@@ -156,6 +156,15 @@ end
 function get_ifname(ifn)
 	local u=uci.cursor()
 	local iface=u:get("network",ifn,"ifname")
+
+	-- handle ap/sta mode.
+	if iface == "wlan0" then
+		local mode = u:get("wireless", "@wifi-iface[0]", "mode")
+		if mode == "ap" then
+			iface = "wlan0-1"
+		end
+	end
+
 	return iface
 end
 
